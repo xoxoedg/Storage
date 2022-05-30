@@ -27,7 +27,7 @@ class ModbusTCPInterface:
             raise NetworkError("Could not open a Connection to the Grid Analyzer Client")
 
     def register_converter(self, content, data_format, data_type):
-        return convert_register_content(content, data_format, data_type)
+        return self.convert_register_content(content, data_format, data_type)
 
     def get_data(self, register, width, data_format, data_type):
         if self.is_open():
@@ -53,17 +53,17 @@ class ModbusTCPInterface:
 
         return percs
 
-def convert_register_content(register_content, data_format, data_type):
+    def convert_register_content(self, register_content, data_format, data_type):
 
-    out_val = None
+        out_val = None
 
-    if data_format.lower() == 'raw':
-        out_val = register_content
-    else:
-        hexValue = str(hex(register_content[1]))[2:] + str(hex(register_content[0]))[2:]
-        out_val = struct.unpack('!f', bytes.fromhex(hexValue))[0]
+        if data_format.lower() == 'raw':
+            out_val = register_content
+        else:
+            hexValue = str(hex(register_content[1]))[2:] + str(hex(register_content[0]))[2:]
+            out_val = struct.unpack('!f', bytes.fromhex(hexValue))[0]
 
-    return out_val
+        return out_val
 
 if __name__ == '__main__':
     connection = ModbusTCPInterface("172.25.224.74", 502)
