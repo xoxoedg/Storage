@@ -1,7 +1,7 @@
 import time
 
 from app.exception.network_error import NetworkError
-from app.exception.no_data_error import NoDataError
+from app.exception.no_data_error_storage import NoDataStorageError
 from app.grid_analyzer.grid_analyzer import ModbusTCPInterface
 from app.storage.storage import Storage
 from utils.parser import ParamParser
@@ -30,7 +30,7 @@ while connection_count < 10 or past_time_in_s < 150000:
     except NetworkError:
         connection_count += 1
 
-    except NoDataError:
+    except NoDataStorageError:
         break
 
 

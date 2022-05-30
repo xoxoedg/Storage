@@ -1,7 +1,7 @@
 from pyModbusTCP.client import ModbusClient
 
 from app.exception.network_error import NetworkError
-from app.exception.no_data_error import NoDataError
+from app.exception.no_data_error_storage import NoDataStorageError
 from utils.converter import PowerConverter
 
 
@@ -28,7 +28,7 @@ class Storage:
         if register is not None:
             return register_value[0]
         else:
-            raise NoDataError("No Data in Storage")
+            raise NoDataStorageError("No Data in Storage")
 
     def get_data_multiple_register(self, register):
         register_value = self.client.read_input_registers(register, 2)

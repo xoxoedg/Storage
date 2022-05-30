@@ -8,6 +8,7 @@ from pyModbusTCP.client import ModbusClient
 import struct
 
 from app.exception.network_error import NetworkError
+from app.exception.no_data_grid_analyzer_error import NoDataGridAnalyzerError
 
 
 class ModbusTCPInterface:
@@ -22,48 +23,40 @@ class ModbusTCPInterface:
 
     def connect(self):
         if self.client.open():
-            return True
+            return
         else:
             raise NetworkError("Could not open a Connection to the Grid Analyzer Client")
 
     def register_converter(self, content, data_format, data_type):
-        return self.convert_register_content(content, data_format, data_type)
+        if data_format.lower() == 'raw':
+            return content
+        return struct.unpack('!f', bytes.fromhex(str(hex(content[1]))[2:] + str(hex(content[0]))[2:]))[0]
 
     def get_data(self, register, width, data_format, data_type):
         if self.is_open():
             register_content = self.client.read_holding_registers(register, width)
-            return self.register_converter(register_content, data_format, data_type) if register_content else print("Register Content is empty")
+            if register_content is not None:
+                return self.register_converter(register_content, data_format, data_type)
+            else:
+                raise NoDataGridAnalyzerError("Register Content is empty")
         return "You have to connect to client first"
 
     def get_success_perc(self, time_list, iterations, register, width, data_format, data_type):
+
+        #[0.1, 0.5, 0.7, 0.9], 100, **def_params #def_params = dict(register=1010, width=2, data_format='BE',data_type='int')
         percs = dict()
-
-        for tm in time_list:
-
+        for time in time_list:
             results = list()
-
             for i in range(iterations):
                 results.append(self.get_data(register, width, data_format, data_type))
-                time.sleep(tm)
+                time.sleep(time)
 
             perc = results.count(None) / len(results)
             err = results.count('ValueError') / len(results)
 
-            percs[tm] = (perc, err)
+            percs[time] = (perc, err)
 
         return percs
-
-    def convert_register_content(self, register_content, data_format, data_type):
-
-        out_val = None
-
-        if data_format.lower() == 'raw':
-            out_val = register_content
-        else:
-            hexValue = str(hex(register_content[1]))[2:] + str(hex(register_content[0]))[2:]
-            out_val = struct.unpack('!f', bytes.fromhex(hexValue))[0]
-
-        return out_val
 
 if __name__ == '__main__':
     connection = ModbusTCPInterface("172.25.224.74", 502)
@@ -78,22 +71,20 @@ if __name__ == '__main__':
     print(connection.get_data(register, width, data_format, data_type))
 
 time_recorder = list()
-    #interfacer = ModbusTCPInterface()
-def_params = dict(register = 1010,
-                  width = 2,
-                  data_format = 'BE',
-                  data_type = 'int')
+# interfacer = ModbusTCPInterface()
+def_params = dict(register=1010,
+                  width=2,
+                  data_format='BE',
+                  data_type='int')
 
 for i in range(100):
+    t = time.process_time()
+    val = connection.get_data(**def_params)  # wie mache ich hier call get data(parameter)?
+    print(val)
+    t1 = time.process_time() - t
+    time_recorder.append(t1)
 
-     t = time.process_time()
-     val = connection.get_data(**def_params) #wie mache ich hier call get data(parameter)?
-     print(val)
-     t1 = time.process_time() - t
-     time_recorder.append(t1)
-
-
-     print(val)
+    print(val)
 
 print('Average time: {:.6f}'.format(np.average(time_recorder)))
 print('Maximum time: {:.6f}'.format(max(time_recorder)))
