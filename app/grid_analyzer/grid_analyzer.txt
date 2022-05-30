@@ -1,0 +1,6 @@
+name: pqida_charging
+ip: 123.45.678.90
+port: 1234
+storage_path: ‚D:\data\measure_1\‘
+P_1: 1010, 2, ‚BE‘, ‚int‘, 1
+P_2: 1012, 2, ‚BE‘, ‚int‘, 1
